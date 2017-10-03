@@ -2,11 +2,11 @@
 class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front_Action{
 	
 	public function indexAction(){
-		$cep = $_POST['cep'];
-		$productId = $_POST['product_id'];
+		$request = Mage::app()->getRequest()->getParams();
+		$request = new Varien_Object($request);
 
-		$product = $this->getProduct($productId);
-		$rate = $this->getShippingEstimate($product, $cep);
+		$product = $this->getProduct($request['product_id']);
+		$rate = $this->getShippingEstimate($product,  $request);
 
 		if (count($rate) == 0){
         	$rate = array('errorShipping' => 'Desculpe, mas no momento não estamos atuando no seu estado.');
@@ -16,13 +16,13 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
       	return ;
 	}
 
-	protected function getShippingEstimate($product, $cep, $productQty = 1, $countryId = "BR"){
+	protected function getShippingEstimate($product,  $request, $countryId = "BR"){
 		$quote = Mage::getModel('sales/quote')->setStoreId(1);
 		$product->getStockItem()->setUseConfigManageStock(false);
     	$product->getStockItem()->setManageStock(false);
 
-	    $quote->addProduct($product, $productQty);
-	    $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($cep); 
+	    $quote->addProduct($product, $request);
+	    $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']); 
 	    $quote->getShippingAddress()->setCollectShippingRates(true);
 	    $quote->getShippingAddress()->collectShippingRates();
 
@@ -66,7 +66,6 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
 	protected function getProduct($productId){
     	$product = Mage::getModel('catalog/product')->load($productId);
-    
     	if ($this->getRequest()->getParam('super_attribute')) {
     		$superAttribute = $this->getRequest()->getParam('super_attribute');
       		$childProduct = Mage::getModel('catalog/product_type_configurable')->getProductByAttributes($superAttribute, $product);
