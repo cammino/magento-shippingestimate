@@ -66,11 +66,18 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
 	protected function getProduct($productId){
     	$product = Mage::getModel('catalog/product')->load($productId);
+
     	if ($this->getRequest()->getParam('super_attribute')) {
     		$superAttribute = $this->getRequest()->getParam('super_attribute');
       		$childProduct = Mage::getModel('catalog/product_type_configurable')->getProductByAttributes($superAttribute, $product);
 			return Mage::getModel('catalog/product')->load($childProduct->getId());
-    	}else{
+    	} else if ($product->getTypeID() == "configurable") {
+    		$conf = Mage::getModel('catalog/product_type_configurable')->setProduct($product);
+		    $simple_collection = $conf->getUsedProductCollection()->addAttributeToSelect('*')->addFilterByRequiredOptions();
+		    foreach($simple_collection as $simple_product){
+		        return $simple_product;
+		    }
+    	} else{
     		return $product;
     	}
     }
