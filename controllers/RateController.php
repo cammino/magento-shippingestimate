@@ -36,10 +36,17 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
       		if ($rate->getMethodTitle() != "") {
 				$quote->getShippingAddress()->setShippingMethod($rate->getCode())->setCollectShippingRates(true);
 				$quote->collectTotals();
-				$discount = $quote->getShippingAddress()->getDiscountAmount() * -1;
-				$price = $rate->getPrice() - $discount;
-				$price = Mage::helper('core')->currency($price, true, false);
-				$shippingRates[] =  array("title" => $rate->getMethodTitle(), "price" => $price);
+
+				if($quote->getShippingAddress()->getFreeShipping() === true) {
+					$shippingRates = array();
+					$shippingRates[] =  array("title" => $rate->getMethodTitle(), "price" => "Frete Grátis");
+					break;
+				} else {
+					$discount = $quote->getShippingAddress()->getDiscountAmount() * -1;
+					$price = $rate->getPrice() - $discount;
+					$price = Mage::helper('core')->currency($price, true, false);
+					$shippingRates[] =  array("title" => $rate->getMethodTitle(), "price" => $price);
+				}
       		}
 	    endforeach;
     
