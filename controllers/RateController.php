@@ -50,12 +50,12 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
       		}
 	    endforeach;
     
-    	$this->setCartPostCode($cep);
+    	$this->setCartPostCode($request['cep']);
 		return $shippingRates;
 	}
 
-	private function setCartPostCode($cep = ""){
-		if (empty($cep))
+	private function setCartPostCode($postcode = ""){
+		if (empty($postcode))
 			return false;
 
 		$cartQuote = Mage::getSingleton('checkout/cart')->getQuote();
@@ -63,12 +63,12 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 		if ($cartQuote->getItemsCount()){
 			$cartQuote->getShippingAddress()
 				->setCountryId('BR')
-				->setPostcode($cep)
+				->setPostcode($postcode)
 				->setCollectShippingRates(true);
 			$cartQuote->save();
-		}else{
-			Mage::getSingleton("core/session")->setQuotePostcode($cep);
-		}   
+		} else {
+			Mage::getSingleton("core/session")->setQuotePostcode($postcode);
+		}
 	}
 
 	protected function getProduct($productId){

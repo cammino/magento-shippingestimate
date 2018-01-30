@@ -27,5 +27,17 @@
 				</args>
 			</shippingestimate>
 		</routers>
+
+		<events>
+			<checkout_cart_save_before>
+				<observers>
+					<shippingestimate_setpostcode>
+						<class>Cammino_Shippingestimate_Model_Observer</class>
+						<method>setPostcode</method>
+					</shippingestimate_setpostcode>
+				</observers>
+			</checkout_cart_save_before>
+		</events>
+
 	</frontend>
 </config>
