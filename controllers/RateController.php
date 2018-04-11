@@ -7,7 +7,8 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
 		$product = $this->getProduct($request['product_id']);
 		$rate = $this->getShippingEstimate($product,  $request);
-
+		Mage::log('RateController:index -> count($rate) ' . count($rate), null, "frete.log");
+		
 		if (count($rate) == 0){
         	$rate = array('errorShipping' => 'Desculpe, mas no momento não estamos atuando no seu estado.');
       	}
@@ -17,6 +18,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 	}
 
 	protected function getShippingEstimate($product,  $request, $countryId = "BR"){
+		Mage::log("RateController:getShippingEstimate " , null, "frete.log");
 		$quote = Mage::getModel('sales/quote')->setStoreId(1);
 		$product->getStockItem()->setUseConfigManageStock(false);
     	$product->getStockItem()->setManageStock(false);
@@ -31,8 +33,9 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
 	    $rates = $quote->getShippingAddress()->getShippingRatesCollection();
 	    $shippingRates = array();
-    
+    	
 	    foreach ($rates as $rate):
+
       		if ($rate->getMethodTitle() != "") {
 				$quote->getShippingAddress()->setShippingMethod($rate->getCode())->setCollectShippingRates(true);
 				$quote->collectTotals();
@@ -48,6 +51,11 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 					$shippingRates[] =  array("title" => $rate->getMethodTitle(), "price" => $price);
 				}
       		}
+
+      		Mage::log("RateController:getShippingEstimate -> shippingRates " . $shippingRates, null, "frete.log");
+      		Mage::log($shippingRates, null, "frete.log");
+      		
+		
 	    endforeach;
     
     	$this->setCartPostCode($request['cep']);
