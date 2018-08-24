@@ -25,6 +25,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
 	    $quote->addProduct($product, $request);
 	    $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']); 
+	    $quote->collectTotals();
 	    $quote->getShippingAddress()->setCollectShippingRates(true);
 	    $quote->getShippingAddress()->collectShippingRates();
 
@@ -38,7 +39,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
       		if ($rate->getMethodTitle() != "") {
 				$quote->getShippingAddress()->setShippingMethod($rate->getCode())->setCollectShippingRates(true);
-				$quote->collectTotals();
+				
 
 				if($quote->getShippingAddress()->getFreeShipping() === true) {
 					$shippingRates = array();
