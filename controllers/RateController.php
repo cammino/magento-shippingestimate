@@ -6,6 +6,20 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 		$request = new Varien_Object($request);
 
 		$product = $this->getProduct($request['product_id']);
+		$product->setData('required_options', 0);
+
+		$options = $product->getOptions();
+
+		if ($options != null) {
+			foreach($options as $option) {
+				$optionData = $option->getData();
+
+				if ($optionData['is_require']) {
+					$option->setData('is_require', 0);
+				}
+			}
+		}
+
 		$rate = $this->getShippingEstimate($product,  $request);
 		Mage::log('RateController:index -> count($rate) ' . count($rate), null, "frete.log");
 		
@@ -36,7 +50,6 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 	    $shippingRates = array();
     	
 	    foreach ($rates as $rate):
-
       		if ($rate->getMethodTitle() != "") {
 				$quote->getShippingAddress()->setShippingMethod($rate->getCode())->setCollectShippingRates(true);
 				
@@ -54,9 +67,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
       		}
 
       		Mage::log("RateController:getShippingEstimate -> shippingRates " . $shippingRates, null, "frete.log");
-      		Mage::log($shippingRates, null, "frete.log");
-      		
-		
+			Mage::log($shippingRates, null, "frete.log");
 	    endforeach;
     
     	$this->setCartPostCode($request['cep']);
@@ -93,7 +104,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 		    foreach($simple_collection as $simple_product){
 		        return $simple_product;
 		    }
-    	} else{
+		} else{
     		return $product;
     	}
     }
