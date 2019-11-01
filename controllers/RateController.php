@@ -5,7 +5,8 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 		$request = Mage::app()->getRequest()->getParams();
 		$request = new Varien_Object($request);
 
-		$product = $this->getProduct($request['product_id']);
+		// $product = $this->getProduct($request['product_id']);
+		$product = $this->getProduct($request['product']);
 		$product->setData('required_options', 0);
 
 		$options = $product->getOptions();
@@ -35,19 +36,9 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 		Mage::log("RateController:getShippingEstimate " , null, "frete.log");
 		$quote = Mage::getModel('sales/quote')->setStoreId(1);
 		$product->getStockItem()->setUseConfigManageStock(false);
-		$product->getStockItem()->setManageStock(false);
-		
-		// Get product price
-		$now = Mage::getSingleton('core/date')->timestamp(time());
-		$websiteId = Mage::app()->getStore()->getWebsiteId();
-		$customerGroup = Mage::getSingleton('customer/session')->getCustomerGroupId();
-		$productId = $product->getId();
+    	$product->getStockItem()->setManageStock(false);
 
-		$productPrice = Mage::getResourceModel('catalogrule/rule')->getRulePrice($now, $websiteId, $customerGroup, $productId);
-
-		$product->setFinalPrice($productPrice); 
-
-		$quote->addProduct($product, $request);
+	    $quote->addProduct($product, $request);
 	    $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']); 
 	    $quote->collectTotals();
 	    $quote->getShippingAddress()->setCollectShippingRates(true);
