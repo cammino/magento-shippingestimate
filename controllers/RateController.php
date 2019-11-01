@@ -45,10 +45,9 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
 		$productPrice = Mage::getResourceModel('catalogrule/rule')->getRulePrice($now, $websiteId, $customerGroup, $productId);
 
-		// var_dump('Preço do produto: ' . $productPrice); die;
+		$product->setFinalPrice($productPrice); 
 
-		// $quote->addProduct($product, $request);
-		$quote->addProduct($product, new Varien_Object(array('price' => $productPrice)));
+		$quote->addProduct($product, $request);
 	    $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']); 
 	    $quote->collectTotals();
 	    $quote->getShippingAddress()->setCollectShippingRates(true);
