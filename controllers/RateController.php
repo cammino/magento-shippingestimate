@@ -5,7 +5,6 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 		$request = Mage::app()->getRequest()->getParams();
 		$request = new Varien_Object($request);
 
-		// $product = $this->getProduct($request['product_id']);
 		$product = $this->getProduct($request['product']);
 		$product->setData('required_options', 0);
 
@@ -93,12 +92,13 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 	}
 
 	protected function getProduct($productId){
-    	$product = Mage::getModel('catalog/product')->load($productId);
+		$product = Mage::getModel('catalog/product')->load($productId);
 
     	if ($this->getRequest()->getParam('super_attribute')) {
-    		$superAttribute = $this->getRequest()->getParam('super_attribute');
-      		$childProduct = Mage::getModel('catalog/product_type_configurable')->getProductByAttributes($superAttribute, $product);
-			return Mage::getModel('catalog/product')->load($childProduct->getId());
+			// $superAttribute = $this->getRequest()->getParam('super_attribute');
+			// $childProduct = Mage::getModel('catalog/product_type_configurable')->getProductByAttributes($superAttribute, $product);
+			// return Mage::getModel('catalog/product')->load($childProduct->getId());
+			return Mage::getModel('catalog/product')->load($productId);
     	} else if ($product->getTypeID() == "configurable") {
     		$conf = Mage::getModel('catalog/product_type_configurable')->setProduct($product);
 		    $simple_collection = $conf->getUsedProductCollection()->addAttributeToSelect('*')->addFilterByRequiredOptions();
