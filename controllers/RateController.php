@@ -39,7 +39,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
 	    $quote->addProduct($product, $request);
 	    $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']); 
-	    $quote->collectTotals();
+	    //$quote->collectTotals();
 	    $quote->getShippingAddress()->setCollectShippingRates(true);
 	    $quote->getShippingAddress()->collectShippingRates();
 
@@ -49,10 +49,16 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 	    $rates = $quote->getShippingAddress()->getShippingRatesCollection();
 	    $shippingRates = array();
     	
-	    foreach ($rates as $rate):
+	    foreach ($rates as $rate) {
       		if ($rate->getMethodTitle() != "") {
 				$quote->getShippingAddress()->setShippingMethod($rate->getCode())->setCollectShippingRates(true);
+				$quote->collectTotals();
 				
+				$itemsDiscount = 0;
+
+				foreach ($quote->getAllItems() as $item) {
+					$itemsDiscount += $item->getDiscountAmount();
+				}
 
 				if($quote->getShippingAddress()->getFreeShipping() === true) {
 					$shippingRates = array();
@@ -60,6 +66,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 					break;
 				} else {
 					$discount = $quote->getShippingAddress()->getDiscountAmount() * -1;
+					$discount = $discount - $itemsDiscount;
 					$price = $rate->getPrice() - $discount;
 					$price = Mage::helper('core')->currency($price, true, false);
 					$shippingRates[] =  array("title" => $rate->getMethodTitle(), "price" => $price);
@@ -68,7 +75,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
       		Mage::log("RateController:getShippingEstimate -> shippingRates " . $shippingRates, null, "frete.log");
 			Mage::log($shippingRates, null, "frete.log");
-	    endforeach;
+	    }
     
     	$this->setCartPostCode($request['cep']);
 		return $shippingRates;
