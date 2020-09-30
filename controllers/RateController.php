@@ -33,13 +33,20 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
 	protected function getShippingEstimate($product,  $request, $countryId = "BR"){
 		Mage::log("RateController:getShippingEstimate " , null, "frete.log");
+
+		$shippingDiscount = Mage::helper("themeconfig")->hasShippingEstimateDiscount();
+
 		$quote = Mage::getModel('sales/quote')->setStoreId(1);
 		$product->getStockItem()->setUseConfigManageStock(false);
     	$product->getStockItem()->setManageStock(false);
 
 	    $quote->addProduct($product, $request);
 	    $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']); 
-	    //$quote->collectTotals();
+
+		if ($shippingDiscount['enable'] == '0') {
+			$quote->collectTotals();
+		}
+
 	    $quote->getShippingAddress()->setCollectShippingRates(true);
 	    $quote->getShippingAddress()->collectShippingRates();
 
@@ -52,12 +59,15 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 	    foreach ($rates as $rate) {
       		if ($rate->getMethodTitle() != "") {
 				$quote->getShippingAddress()->setShippingMethod($rate->getCode())->setCollectShippingRates(true);
-				$quote->collectTotals();
-				
-				$itemsDiscount = 0;
 
-				foreach ($quote->getAllItems() as $item) {
-					$itemsDiscount += $item->getDiscountAmount();
+				if ($shippingDiscount['enable'] == '1') {
+					$quote->collectTotals();
+				
+					$itemsDiscount = 0;
+
+					foreach ($quote->getAllItems() as $item) {
+						$itemsDiscount += $item->getDiscountAmount();
+					}
 				}
 
 				if($quote->getShippingAddress()->getFreeShipping() === true) {
@@ -66,7 +76,11 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 					break;
 				} else {
 					$discount = $quote->getShippingAddress()->getDiscountAmount() * -1;
-					$discount = $discount - $itemsDiscount;
+
+					if ($shippingDiscount['enable'] == '1') {
+						$discount = $discount - $itemsDiscount;
+					}
+
 					$price = $rate->getPrice() - $discount;
 					$price = Mage::helper('core')->currency($price, true, false);
 					$shippingRates[] =  array("title" => $rate->getMethodTitle(), "price" => $price);
