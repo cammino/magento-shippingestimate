@@ -80,6 +80,9 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 					if ($shippingDiscount['enable'] == '1') {
 						$discount = $discount - $itemsDiscount;
 					}
+					else if ($shippingDiscount['enable'] == '0') {
+						$discount = 0;
+					}
 
 					$price = $rate->getPrice() - $discount;
 					$price = Mage::helper('core')->currency($price, true, false);
