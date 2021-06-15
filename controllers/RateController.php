@@ -40,7 +40,10 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 		$product->getStockItem()->setUseConfigManageStock(false);
     	$product->getStockItem()->setManageStock(false);
 
-	    $quote->addProduct($product, $request);
+		// $quote->addProduct($product, $request);
+		$quoteItem = $quote->addProduct($product, $request);
+		$quoteItem->setQty($request['qty']);
+
 	    $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']); 
 
 		if ($shippingDiscount['enable'] == '0') {
