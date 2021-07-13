@@ -32,6 +32,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 	}
 
 	protected function getShippingEstimate($product,  $request, $countryId = "BR"){
+		try {
 		Mage::log("RateController:getShippingEstimate " , null, "frete.log");
 
 		$shippingDiscount = Mage::helper("themeconfig")->hasShippingEstimateDiscount();
@@ -99,6 +100,9 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
     
     	$this->setCartPostCode($request['cep']);
 		return $shippingRates;
+		} catch(Exception $ex) {
+			return array('errorShipping' => 'Quantidade insuficiente no estoque para estimar valor da entrega. Tente com uma menor quantidade.');
+		}
 	}
 
 	private function setCartPostCode($postcode = ""){
