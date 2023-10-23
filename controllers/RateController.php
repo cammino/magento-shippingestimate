@@ -6,6 +6,10 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 		$request = new Varien_Object($request);
 
 		$product = $this->getProduct($request['product']);
+		if (!empty($request['super_attribute'])) {
+            $childProduct = Mage::getModel('catalog/product_type_configurable')->getProductByAttributes($request['super_attribute'], $product);
+			$product = $childProduct;
+		}
 		$product->setData('required_options', 0);
 
 		$options = $product->getOptions();
