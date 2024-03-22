@@ -28,7 +28,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 		Mage::log('RateController:index -> count($rate) ' . count($rate), null, "frete.log");
 		
 		if (count($rate) == 0){
-        	$rate = array('errorShipping' => 'Desculpe, mas no momento não estamos atuando no seu estado.');
+        	$rate = array('errorShipping' => 'Desculpe, mas no momento não estamos atuando na sua região.');
       	}
 
       	echo json_encode($rate);
