@@ -41,7 +41,7 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
 		$shippingDiscount = Mage::helper("themeconfig")->hasShippingEstimateDiscount();
 
-		$quote = Mage::getModel('sales/quote')->setStoreId(1);
+		$quote = Mage::getModel('sales/quote')->setStoreId(Mage::app()->getStore()->getStoreId());
 		$product->getStockItem()->setUseConfigManageStock(false);
     	$product->getStockItem()->setManageStock(false);
 
