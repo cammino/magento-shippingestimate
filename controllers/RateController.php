@@ -35,79 +35,78 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
       	return ;
 	}
 
-	protected function getShippingEstimate($product,  $request, $countryId = "BR"){
-		try {
-		Mage::log("RateController:getShippingEstimate " , null, "frete.log");
+	protected function getShippingEstimate($product, $request, $countryId = "BR"){
+        try {
+            Mage::log("RateController:getShippingEstimate ", null, "frete.log");
 
-		$shippingDiscount = Mage::helper("themeconfig")->hasShippingEstimateDiscount();
+            $shippingDiscount = Mage::helper("themeconfig")->hasShippingEstimateDiscount();
+            $quote = Mage::getModel('sales/quote')->setStoreId(Mage::app()->getStore()->getStoreId());
+            $product->getStockItem()->setUseConfigManageStock(false);
+            $product->getStockItem()->setManageStock(false);
 
-		$quote = Mage::getModel('sales/quote')->setStoreId(Mage::app()->getStore()->getStoreId());
-		$product->getStockItem()->setUseConfigManageStock(false);
-    	$product->getStockItem()->setManageStock(false);
+			$weight = $product->getResource()->getAttributeRawValue($product->getId(), 'weight', Mage::app()->getStore());
+            Mage::log("Peso do item de cotação: " . $weight, null, 'frete.log');
+			$product->setWeight($weight);
 
-		// $quote->addProduct($product, $request);
-		$quoteItem = $quote->addProduct($product, $request);
-		$quoteItem->setQty($request['qty']);
+            $quoteItem = $quote->addProduct($product, $request);
+            $quoteItem->setQty($request['qty']);
 
-	    $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']); 
+            $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']);
 
-		if ($shippingDiscount['enable'] == '0') {
-			$quote->collectTotals();
-		}
+            if ($shippingDiscount['enable'] == '0') {
+                $quote->collectTotals();
+            }
 
-	    $quote->getShippingAddress()->setCollectShippingRates(true);
-	    $quote->getShippingAddress()->collectShippingRates();
+            $quote->getShippingAddress()->setCollectShippingRates(true);
+            $quote->getShippingAddress()->collectShippingRates();
+            $quote->setCustomerGroupId(0);
+            $quote->setCouponCode('');
 
-	    $quote->setCustomerGroupId(0);
-	    $quote->setCouponCode('');
+            $rates = $quote->getShippingAddress()->getShippingRatesCollection();
+            $shippingRates = array();
 
-	    $rates = $quote->getShippingAddress()->getShippingRatesCollection();
-	    $shippingRates = array();
-    	
-	    foreach ($rates as $rate) {
-      		if ($rate->getMethodTitle() != "") {
-				$quote->getShippingAddress()->setShippingMethod($rate->getCode())->setCollectShippingRates(true);
+            foreach ($rates as $rate) {
+                if ($rate->getMethodTitle() != "") {
+                    $quote->getShippingAddress()->setShippingMethod($rate->getCode())->setCollectShippingRates(true);
 
-				if ($shippingDiscount['enable'] == '1') {
-					$quote->collectTotals();
-				
-					$itemsDiscount = 0;
+                    if ($shippingDiscount['enable'] == '1') {
+                        $quote->collectTotals();
+                        $itemsDiscount = 0;
 
-					foreach ($quote->getAllItems() as $item) {
-						$itemsDiscount += $item->getDiscountAmount();
-					}
-				}
+                        foreach ($quote->getAllItems() as $item) {
+                            $itemsDiscount += $item->getDiscountAmount();
+                        }
+                    }
 
-				if($quote->getShippingAddress()->getFreeShipping() === true) {
-					$shippingRates = array();
-					$shippingRates[] =  array("title" => $rate->getMethodTitle(), "price" => "Frete Grátis");
-					break;
-				} else {
-					$discount = $quote->getShippingAddress()->getDiscountAmount() * -1;
+                    if($quote->getShippingAddress()->getFreeShipping() === true) {
+                        $shippingRates = array();
+                        $shippingRates[] = array("title" => $rate->getMethodTitle(), "price" => "Frete Grátis");
+                        break;
+                    } else {
+                        $discount = $quote->getShippingAddress()->getDiscountAmount() * -1;
 
-					if ($shippingDiscount['enable'] == '1') {
-						$discount = $discount - $itemsDiscount;
-					}
-					else if ($shippingDiscount['enable'] == '0') {
-						$discount = 0;
-					}
+                        if ($shippingDiscount['enable'] == '1') {
+                            $discount = $discount - $itemsDiscount;
+                        } else if ($shippingDiscount['enable'] == '0') {
+                            $discount = 0;
+                        }
 
-					$price = $rate->getPrice() - $discount;
-					$price = Mage::helper('core')->currency($price, true, false);
-					$shippingRates[] =  array("title" => $rate->getMethodTitle(), "price" => $price);
-				}
-      		}
+                        $price = $rate->getPrice() - $discount;
+                        $price = Mage::helper('core')->currency($price, true, false);
+                        $shippingRates[] = array("title" => $rate->getMethodTitle(), "price" => $price);
+                    }
+                }
 
-      		Mage::log("RateController:getShippingEstimate -> shippingRates " . $shippingRates, null, "frete.log");
-			Mage::log($shippingRates, null, "frete.log");
-	    }
-    
-    	$this->setCartPostCode($request['cep']);
-		return $shippingRates;
-		} catch(Exception $ex) {
-			return array('errorShipping' => 'Quantidade insuficiente no estoque para estimar valor da entrega. Tente com uma menor quantidade.');
-		}
-	}
+                Mage::log("RateController:getShippingEstimate -> shippingRates " . $shippingRates, null, "frete.log");
+                Mage::log($shippingRates, null, "frete.log");
+            }
+
+            $this->setCartPostCode($request['cep']);
+            return $shippingRates;
+        } catch(Exception $ex) {
+            return array('errorShipping' => 'Quantidade insuficiente no estoque para estimar valor da entrega. Tente com uma menor quantidade.');
+        }
+    }
 
 	private function setCartPostCode($postcode = ""){
 		if (empty($postcode))
