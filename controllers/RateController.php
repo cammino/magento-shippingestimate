@@ -44,11 +44,9 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
             $product->getStockItem()->setUseConfigManageStock(false);
             $product->getStockItem()->setManageStock(false);
 
-			$weight = $product->getResource()->getAttributeRawValue($product->getId(), 'weight', Mage::app()->getStore());
-            Mage::log("Peso do item de cotação: " . $weight, null, 'frete.log');
-			$product->setWeight($weight);
+			$fullProduct = Mage::getModel('catalog/product')->load($product->getId());
 
-            $quoteItem = $quote->addProduct($product, $request);
+            $quoteItem = $quote->addProduct($fullProduct, $request);
             $quoteItem->setQty($request['qty']);
 
             $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']);
