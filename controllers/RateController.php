@@ -40,7 +40,31 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
             Mage::log("RateController:getShippingEstimate ", null, "frete.log");
 
             $shippingDiscount = Mage::helper("themeconfig")->hasShippingEstimateDiscount();
+            $cartQuote = Mage::getSingleton('checkout/session')->getQuote();
             $quote = Mage::getModel('sales/quote')->setStoreId(Mage::app()->getStore()->getStoreId());
+
+            if ($cartQuote->getId()) {
+                $quote->setCustomerGroupId($cartQuote->getCustomerGroupId());
+                $quote->setCouponCode($cartQuote->getCouponCode());
+                $quote->setCustomer($cartQuote->getCustomer());
+                foreach ($cartQuote->getAllVisibleItems() as $cartItem) {
+                    try {
+                        $clonedProduct = Mage::getModel('catalog/product')->load($cartItem->getProduct()->getId());
+                        $quote->addProduct($clonedProduct, $cartItem->getQty());
+                    } catch (Exception $e) {
+                        Mage::log(
+                            sprintf(
+                                "RateController:getShippingEstimate -> erro ao clonar item do carrinho (product_id=%s): %s",
+                                $cartItem->getProduct()->getId(),
+                                $e->getMessage()
+                            ),
+                            null,
+                            "frete.log"
+                        );
+                    }
+                }
+            }
+
             $product->getStockItem()->setUseConfigManageStock(false);
             $product->getStockItem()->setManageStock(false);
 
@@ -51,14 +75,10 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
 
             $quote->getShippingAddress()->setCountryId($countryId)->setPostcode($request['cep']);
 
-            if ($shippingDiscount['enable'] == '0') {
-                $quote->collectTotals();
-            }
+            $quote->collectTotals();
 
             $quote->getShippingAddress()->setCollectShippingRates(true);
             $quote->getShippingAddress()->collectShippingRates();
-            $quote->setCustomerGroupId(0);
-            $quote->setCouponCode('');
 
             $rates = $quote->getShippingAddress()->getShippingRatesCollection();
             $shippingRates = array();
@@ -76,23 +96,18 @@ class Cammino_Shippingestimate_RateController extends Mage_Core_Controller_Front
                         }
                     }
 
-                    if($quote->getShippingAddress()->getFreeShipping() === true) {
-                        $shippingRates = array();
-                        $shippingRates[] = array("title" => $rate->getMethodTitle(), "price" => "Frete Grátis");
-                        break;
-                    } else {
-                        $discount = $quote->getShippingAddress()->getDiscountAmount() * -1;
+                    $discount = $quote->getShippingAddress()->getDiscountAmount() * -1;
 
-                        if ($shippingDiscount['enable'] == '1') {
-                            $discount = $discount - $itemsDiscount;
-                        } else if ($shippingDiscount['enable'] == '0') {
-                            $discount = 0;
-                        }
-
-                        $price = $rate->getPrice() - $discount;
-                        $price = Mage::helper('core')->currency($price, true, false);
-                        $shippingRates[] = array("title" => $rate->getMethodTitle(), "price" => $price);
+                    if ($shippingDiscount['enable'] == '1') {
+                        $discount = $discount - $itemsDiscount;
+                    } else if ($shippingDiscount['enable'] == '0') {
+                        $discount = 0;
                     }
+
+                    $price = $rate->getPrice() - $discount;
+
+                    $price = Mage::helper('core')->currency($price, true, false);
+                    $shippingRates[] = array("title" => $rate->getMethodTitle(), "price" => $price);
                 }
 
                 Mage::log("RateController:getShippingEstimate -> shippingRates " . $shippingRates, null, "frete.log");
